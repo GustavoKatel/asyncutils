@@ -122,6 +122,36 @@ func TestCollectChan(t *testing.T) {
 	assert.False(ok)
 }
 
+func TestCollectChanFirstServe(t *testing.T) {
+	assert := assert.New(t)
+
+	exc, err := NewDefaultExecutor(1)
+	assert.Nil(err)
+
+	assert.Nil(exc.Start())
+	defer exc.Stop()
+
+	job1 := func(ctx context.Context) (interface{}, error) {
+		<-time.After(500 * time.Millisecond)
+		return 4, nil
+	}
+	job2 := func(ctx context.Context) (interface{}, error) {
+		return 8, nil
+	}
+
+	results := exc.CollectChanFirstServe(job1, job2)
+	r := <-results
+	assert.Equal(1, r.Index)
+	assert.Equal(8, r.Result)
+
+	r = <-results
+	assert.Equal(0, r.Index)
+	assert.Equal(4, r.Result)
+
+	r, ok := <-results
+	assert.False(ok)
+}
+
 func TestCollect(t *testing.T) {
 	assert := assert.New(t)
 

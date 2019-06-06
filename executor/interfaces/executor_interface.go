@@ -16,8 +16,11 @@ type Executor interface {
 	// please check ErrorChan
 	Collect(jobs ...JobWithResultFn) ([]interface{}, error)
 
-	// CollectChan same as Collect but return a channel with the results
+	// CollectChan same as Collect but return a channel with the results sorted
 	CollectChan(jobs ...JobWithResultFn) <-chan interface{}
+
+	// CollectChanFirstServe same as Collect but return a channel with the results not sorted
+	CollectChanFirstServe(jobs ...JobWithResultFn) <-chan *JobResultIndexed
 
 	// ErrorChan registers an error emitting channel
 	ErrorChan(ch chan error)

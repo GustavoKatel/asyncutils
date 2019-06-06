@@ -129,7 +129,7 @@ func (ge *goExecutor) CollectChan(jobs ...interfaces.JobWithResultFn) <-chan int
 	closed := false
 	publishMutex := &sync.Mutex{}
 
-	publish := func() {
+	publish := func(pos int) {
 		publishMutex.Lock()
 		defer publishMutex.Unlock()
 
@@ -156,7 +156,7 @@ func (ge *goExecutor) CollectChan(jobs ...interfaces.JobWithResultFn) <-chan int
 
 				if ctx.Err() == nil {
 					results.Store(pos, r)
-					go publish()
+					go publish(pos)
 				}
 
 				return err
@@ -169,6 +169,50 @@ func (ge *goExecutor) CollectChan(jobs ...interfaces.JobWithResultFn) <-chan int
 	ge.hasJobsEvent.Set()
 
 	return (<-chan interface{})(ch)
+}
+
+func (ge *goExecutor) CollectChanFirstServe(jobs ...interfaces.JobWithResultFn) <-chan *interfaces.JobResultIndexed {
+	ch := make(chan *interfaces.JobResultIndexed)
+
+	var count int
+	publishMutex := &sync.Mutex{}
+
+	publish := func(r interface{}, pos int) {
+		publishMutex.Lock()
+		defer publishMutex.Unlock()
+
+		ch <- &interfaces.JobResultIndexed{
+			Result: r,
+			Index:  pos,
+		}
+		count++
+
+		if count == len(jobs) {
+			close(ch)
+		}
+	}
+
+	for i, job := range jobs {
+		pos := i
+		jobFn := job
+		jobSpec := &jobImpl{
+			jobFn: func(ctx context.Context) error {
+				r, err := jobFn(ctx)
+
+				if ctx.Err() == nil {
+					go publish(r, pos)
+				}
+
+				return err
+			},
+		}
+
+		ge.queue.PushBack(jobSpec)
+	}
+
+	ge.hasJobsEvent.Set()
+
+	return (<-chan *interfaces.JobResultIndexed)(ch)
 }
 
 func (ge *goExecutor) Collect(jobs ...interfaces.JobWithResultFn) ([]interface{}, error) {
