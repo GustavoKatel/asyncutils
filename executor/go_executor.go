@@ -3,7 +3,6 @@ package executor
 import (
 	"context"
 	"sync"
-	"sync/atomic"
 
 	"github.com/GustavoKatel/asyncutils/event"
 	"github.com/GustavoKatel/asyncutils/executor/interfaces"
@@ -126,20 +125,25 @@ func (ge *goExecutor) CollectChan(jobs ...interfaces.JobWithResultFn) <-chan int
 	ch := make(chan interface{})
 
 	results := sync.Map{}
-	var currentPos int64
+	var currentPos int
+	closed := false
+	publishMutex := &sync.Mutex{}
+
 	publish := func() {
-		var pos int
-		for pos = int(currentPos); pos < len(jobs); pos++ {
-			atomic.StoreInt64(&currentPos, int64(pos))
-			r, prs := results.Load(pos)
+		publishMutex.Lock()
+		defer publishMutex.Unlock()
+
+		for ; currentPos < len(jobs); currentPos++ {
+			r, prs := results.Load(currentPos)
 			if !prs {
 				return
 			}
 			ch <- r
 		}
 
-		if pos == len(jobs) {
+		if !closed && currentPos == len(jobs) {
 			close(ch)
+			closed = true
 		}
 	}
 
@@ -152,7 +156,7 @@ func (ge *goExecutor) CollectChan(jobs ...interfaces.JobWithResultFn) <-chan int
 
 				if ctx.Err() == nil {
 					results.Store(pos, r)
-					publish()
+					go publish()
 				}
 
 				return err
