@@ -88,14 +88,16 @@ func (aw *schedulerImpl) waitAndSchedule(job executorIfaces.JobFn, diffDelay tim
 		select {
 		case <-time.After(diffDelay):
 			aw.throttleLastMutex.Lock()
-			defer aw.throttleLastMutex.Unlock()
 
 			if aw.throttleLast == nil {
+				aw.throttleLastMutex.Unlock()
 				return
 			}
 
 			job := aw.throttleLast
 			aw.throttleLast = nil
+
+			aw.throttleLastMutex.Unlock()
 
 			aw.PostThrottledJob(job, delay)
 		case <-aw.ctx.Done():
