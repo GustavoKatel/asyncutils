@@ -1,6 +1,7 @@
 # AsyncUtils
 
 [![GoDoc](https://godoc.org/github.com/GustavoKatel/asyncutils?status.svg)](https://godoc.org/github.com/GustavoKatel/asyncutils)
+![Main](https://github.com/GustavoKatel/asyncutils/workflows/Main/badge.svg)
 
 Synchornization and asynchronous operations utilities in golang
 
@@ -146,6 +147,7 @@ assert.Equal(2, re)
 ## Scheduler
 
 Scheduler and throttler. See [Scheduler](https://github.com/GustavoKatel/asyncutils/blob/master/scheduler/README.md)
+
 ```go
 type Scheduler interface {
 	// Start starts the worker channel
@@ -167,3 +169,4 @@ type Scheduler interface {
 	ErrorChan(ch chan error)
 }
 ```
+
