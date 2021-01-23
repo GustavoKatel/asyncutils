@@ -11,7 +11,6 @@ Thread-safe queue implementation
 
 ```go
 type Queue interface {
-	type Queue interface {
 	PushBack(el interface{})
 	PushFront(el interface{})
 
@@ -26,14 +25,13 @@ type Queue interface {
 
 	Size() int
 }
-}
 ```
 
 ## Event
 
 Event synchronizes goroutines with a set-reset flag style
 
-````go
+```go
 type EventWaiter interface {
 	// Wait waits this flag to be set
 	Wait()
@@ -57,7 +55,8 @@ type Event interface {
 
 	// Reset resets this flag
 	Reset()
-}```
+}
+```
 
 ## Executor
 
@@ -88,7 +87,7 @@ type Executor interface {
 	// Len size of the pending queue
 	Len() int
 }
-````
+```
 
 ### Example:
 

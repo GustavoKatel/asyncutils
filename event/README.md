@@ -4,7 +4,7 @@
 
 Event synchronizes goroutines with a set-reset flag style
 
-````go
+```go
 type EventWaiter interface {
 	// Wait waits this flag to be set
 	Wait()
@@ -28,6 +28,6 @@ type Event interface {
 
 	// Reset resets this flag
 	Reset()
-}```
-````
+}
+```
 
